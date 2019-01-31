@@ -1,113 +1,91 @@
 package pacman.environnementRL;
 
-import environnement.Etat;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import pacman.elements.MazePacman;
 import pacman.elements.StateAgentPacman;
 import pacman.elements.StateGamePacman;
-
-import java.util.ArrayList;
+import environnement.Etat;
+import environnement.Etat2D;
 
 /**
- * Classe pour définir un etat du MDP pour l'environnement pacman avec QLearning tabulaire
+ * Classe pour définir un etat du MDP pour l'environnement pacman avec
+ * QLearning tabulaire
+ *
  */
 public class EtatPacmanMDPClassic implements Etat, Cloneable {
-	private ArrayList<Position> positionsFantomes;
-	private ArrayList<Position> positionsDots;
-	private Position positionPacman;
-	private MazePacman mazePacman;
+	private ArrayList<Integer> positionsFantomes;
+	private ArrayList<Integer> positionsDots;
+	protected transient StateGamePacman etat;
+	protected transient int X, Y;
+	protected transient MazePacman maze;
 
 	public EtatPacmanMDPClassic(StateGamePacman _stategamepacman) {
-		mazePacman = _stategamepacman.getMaze();
+		etat = _stategamepacman;
+		maze = etat.getMaze();
 		positionsDots = new ArrayList<>();
 		positionsFantomes = new ArrayList<>();
 
-		// On cherche le pacman dans le labyrinthe
-		for (int i = 0; i < _stategamepacman.getNumberOfPacmans(); i++) {
-			StateAgentPacman pacmanState = _stategamepacman.getPacmanState(i);
-			positionPacman = new Position(pacmanState.getX(), pacmanState.getY());
+
+		StateAgentPacman pacman = etat.getPacmanState(0);
+		X = pacman.getX();
+		Y = pacman.getY();
+
+		int dx,dy;
+		Boolean foundFood = false;
+		int distanceLook = 1;
+
+		while(distanceLook <= 5){
+			foundFood = true;
+			if(maze.isFood(X, Y+distanceLook)){
+				positionsDots.add(X);
+				positionsDots.add(Y+distanceLook);
+			}else if(maze.isFood(X, Y-distanceLook)){
+				positionsDots.add(X);
+				positionsDots.add(Y-distanceLook);
+			}else if(maze.isFood(X+distanceLook, Y)){
+				positionsDots.add(X+distanceLook);
+				positionsDots.add(Y);
+			}else if(maze.isFood(X-distanceLook, Y)){
+				positionsDots.add(X-distanceLook);
+				positionsDots.add(Y);
+			}
+//			else{
+//				for(int i=0;i<=distanceLook;i++){
+//					dx = i;
+//					dy = distanceLook-i;
+//					if(maze.isFood(X+dx, Y+dy) || maze.isCapsule(X+dx, Y+dy)){ //1er quadrant
+//						foodSense = "1";
+//					}else if(maze.isFood(X-dx, Y+dy) || maze.isCapsule(X-dx, Y+dy)){ //2eme quadrant
+//						foodSense = "2";
+//					}else if(maze.isFood(X-dx, Y-dy) || maze.isCapsule(X-dx, Y-dy)){ //2eme quadrant
+//						foodSense = "3";
+//					}else if(maze.isFood(X+dx, Y-dy) || maze.isCapsule(X+dx, Y-dy)){ //2eme quadrant
+//						foodSense = "4";
+//					}
+//				}
+//			}
+			distanceLook++;
 		}
 
-		// On a un seul Pacman dans le jeu
-		int pacX = positionPacman.x;
-		int pacY = positionPacman.y;
+		distanceLook = 4;
+		// On regarde si un fant�me se trouve autour du pacman
+		for (int j = 0; j < etat.getNumberOfGhosts(); j++) {
+			StateAgentPacman ghostState = etat.getGhostState(j);
+			int ghostX = ghostState.getX();
+			int ghostY = ghostState.getY();
 
-		// On cherche un dot autour du pacman
-		int p = 1;
-		while (p < 4) {
-			// Haut, Bas, Gauche, Droite
-			if (checkMazeLimits(pacX + p, 'x'))
-				checkDotsPosition(pacX + p, pacY, new Position(pacX + p, pacY));
-			if (checkMazeLimits(pacX - p, 'x'))
-				checkDotsPosition(pacX - 1, pacY, new Position(pacX - p, pacY));
-			if (checkMazeLimits(pacY + p, 'y'))
-				checkDotsPosition(pacX, pacY + p, new Position(pacX, pacY + p));
-			if (checkMazeLimits(pacY - p, 'y'))
-				checkDotsPosition(pacX, pacY - p, new Position(pacX, pacY - p));
-
-			// Diagonales
-			if (checkDiagonalMazeLimits(pacX + p, pacY + p))
-				checkDotsPosition(pacX + p, pacY + p, new Position(pacX + p, pacY + p));
-			if (checkDiagonalMazeLimits(pacX + p, pacY - p))
-				checkDotsPosition(pacX + p, pacY - p, new Position(pacX + p, pacY - p));
-			if (checkDiagonalMazeLimits(pacX - p, pacY + p))
-				checkDotsPosition(pacX - p, pacY + p, new Position(pacX - p, pacY + p));
-			if (checkDiagonalMazeLimits(pacX - p, pacY - p))
-				checkDotsPosition(pacX - p, pacY - p, new Position(pacX - p, pacY - p));
-
-			p++;
-		}
-
-		// On regarde si un fantôme se trouve autour du pacman
-		for (int j = 0; j < _stategamepacman.getNumberOfGhosts(); j++) {
-			StateAgentPacman ghostState = _stategamepacman.getGhostState(j);
-			int gostX = ghostState.getLastX();
-			int gostY = ghostState.getLastY();
-
-			if (checkMazeLimits(pacX + 1, 'x'))
-				addGhostToList(pacX + 1, pacY, gostX, gostY);
-			if (checkMazeLimits(pacX - 1, 'x'))
-				addGhostToList(pacX - 1, pacY, gostX, gostY);
-			if (checkMazeLimits(pacY + 1, 'y'))
-				addGhostToList(pacX, pacY + 1, gostX, gostY);
-			if (checkMazeLimits(pacY - 1, 'y'))
-				addGhostToList(pacX, pacY - 1, gostX, gostY);
-
-			// Diagonales
-			if (checkDiagonalMazeLimits(pacX + 1, pacY + 1))
-				addGhostToList(pacX + 1, pacY + 1, gostX, gostY);
-			if (checkDiagonalMazeLimits(pacX + 1, pacY - 1))
-				addGhostToList(pacX + 1, pacY - 1, gostX, gostY);
-			if (checkDiagonalMazeLimits(pacX - 1, pacY + 1))
-				addGhostToList(pacX - 1, pacY + 1, gostX, gostY);
-			if (checkDiagonalMazeLimits(pacX - 1, pacY - 1))
-				addGhostToList(pacX - 1, pacY - 1, gostX, gostY);
+			if((ghostX - X <= distanceLook || ghostX - X >= -distanceLook) && (ghostY - Y <= distanceLook || ghostY - Y >= -distanceLook)){
+				positionsFantomes.add(ghostX);
+				positionsFantomes.add(ghostY);
+			}
 		}
 
 	}
 
-	private boolean checkMazeLimits(int pos, char axis) {
-		if (axis == 'x') {
-			return pos < mazePacman.getSizeX() && pos > 0;
-		}
-		if (axis == 'y') {
-			return pos < mazePacman.getSizeY() && pos > 0;
-		}
-		return false;
-	}
 
-	private boolean checkDiagonalMazeLimits(int posX, int posY) {
-		return posX < mazePacman.getSizeX() && posX > 0 && posY < mazePacman.getSizeY() && posY > 0;
-	}
 
-	private void checkDotsPosition(int pacmanPosX, int y, Position e) {
-		if (mazePacman.isFood(pacmanPosX, y)) {
-			positionsDots.add(e);
-		}
-	}
-
-	private void addGhostToList(int pacX, int pacY, int gostX, int gostY) {
-		positionsFantomes.add(new Position(gostX, gostY));
-	}
 
 	@Override
 	public String toString() {
@@ -134,73 +112,26 @@ public class EtatPacmanMDPClassic implements Etat, Cloneable {
 	}
 
 
-	private class Position {
-		private int x;
-		private int y;
 
-		public Position(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			Position position = (Position) o;
-
-			if (x != position.x) return false;
-			return y == position.y;
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = x;
-			result = 31 * result + y;
-			return result;
-		}
-	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		EtatPacmanMDPClassic that = (EtatPacmanMDPClassic) o;
-
-		if (positionsFantomes != null ? !positionsFantomes.equals(that.positionsFantomes) : that.positionsFantomes != null)
-			return false;
-		if (positionsDots != null ? !positionsDots.equals(that.positionsDots) : that.positionsDots != null)
-			return false;
-		return positionPacman != null ? positionPacman.equals(that.positionPacman) : that.positionPacman == null;
-
+		return this.hashCode() == o.hashCode();
 	}
 
 	@Override
 	public int hashCode() {
 		int result = positionsFantomes != null ? positionsFantomes.hashCode() : 0;
 		result = 31 * result + (positionsDots != null ? positionsDots.hashCode() : 0);
-		result = 31 * result + (positionPacman != null ? positionPacman.hashCode() : 0);
+		result = 31 * result;
 		return result;
 	}
 
-	public int getDimensions() {
-		int nb = 0;
-		for (int i = 0; i < mazePacman.getSizeX(); i++) {
-			for (int j = 0; j < mazePacman.getSizeY(); j++) {
-				nb = mazePacman.isWall(i, j) ? nb : nb + 1;
-			}
-		}
+	public int getDimensions(){
 
-        /*if(positionsDots.size() > 1) {
-            nb = positionsDots.size()*nb;
-        }
 
-        if(positionsFantomes.size() > 1) {
-            nb = positionsFantomes.size()*nb;
-        }*/
-		return nb;
+		return 0;
 	}
+
+
 }

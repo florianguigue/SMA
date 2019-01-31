@@ -1,5 +1,8 @@
 package simuProjetPacman;
 
+import agent.rlapproxagent.FeatureFunction;
+import agent.rlapproxagent.FeatureFunctionPacman;
+import agent.rlapproxagent.QLApproxAgent;
 import indicateursJFX.IndicateursMeanSumRwd;
 
 import java.awt.Dimension;
@@ -13,6 +16,7 @@ import javafx.stage.Stage;
 
 import javax.swing.JFrame;
 
+import pacman.environnementRL.EnvironnementPacmanFeatureRL;
 import pacman.environnementRL.EnvironnementPacmanMDPClassic;
 import pacman.environnementRL.EnvironnementPacmanRL;
 import pacman.graphics.GamePacmanPanel;
@@ -24,7 +28,7 @@ public class testRLPacman extends Application {
 	/**
 	 * type de labyrinthe pour le jeu de pacman
 	 */
-	static String mazename = "pacmanlayouts/smallGrid.lay";//smallGrid smallGrid2 mediumGrid
+	static String mazename = "pacmanlayouts/mediumGrid.lay";//smallGrid smallGrid2 mediumGrid
 
 	// parametres RL*/
 	static double gamma = 0.8;
@@ -35,11 +39,11 @@ public class testRLPacman extends Application {
 	/**
 	 * nombre d'experiences a lancer (pour faire une moyenne), une experience est un apprentissage sur plusieurs parties
 	 */
-	static int nbmean = 3;
+	static int nbmean = 1;
 	/**
 	 * nombre de parties ou l'agent apprend
 	 */
-	static int nbepisodelearn = 10000;
+	static int nbepisodelearn = 5000;
 	/**
 	 * nombre de partie ou l'agent exploite la politique apprise (epsilon=0)
 	 */
@@ -76,20 +80,20 @@ public class testRLPacman extends Application {
 
 	private static void setRLAgent() {
 		//QLearning tabulaire classique
-		pacmanmdp = new EnvironnementPacmanMDPClassic(mazename,true);
-		rlagent = new QLearningAgent(alpha,gamma,pacmanmdp);
+		/*pacmanmdp = new EnvironnementPacmanMDPClassic(mazename,true);
+		rlagent = new QLearningAgent(alpha,gamma,pacmanmdp);*/
 
 		//Qlearning avec fonctions caracteristiques identite
         /*pacmanmdp = new EnvironnementPacmanMDPClassic(mazename, true);
         EtatPacmanMDPClassic etatmdp = (EtatPacmanMDPClassic) pacmanmdp.getEtatCourant();
         System.out.println("Dimensions de etatMDP: " + etatmdp.getDimensions());
         FeatureFunction featurefunction = new FeatureFunctionIdentity(etatmdp.getDimensions(), 4);
-        rlagent = new QLApproxAgent(alpha, gamma, pacmanmdp, featurefunction);
+        rlagent = new QLApproxAgent(alpha, gamma, pacmanmdp, featurefunction);*/
 
         //QLearning avec approximation lineaire
-		/*pacmanmdp = new EnvironnementPacmanFeatureRL(mazename,true);//smallGrid smallGrid2 mediumGrid
+		pacmanmdp = new EnvironnementPacmanFeatureRL(mazename,true);//smallGrid smallGrid2 mediumGrid
 		FeatureFunction featurefunction2 = new FeatureFunctionPacman();
-		rlagent = new QLApproxAgent(alpha,gamma,pacmanmdp,featurefunction2);*/
+		rlagent = new QLApproxAgent(alpha,gamma,pacmanmdp,featurefunction2);
 
 
 	}
