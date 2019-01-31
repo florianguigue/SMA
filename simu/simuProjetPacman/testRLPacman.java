@@ -39,7 +39,7 @@ public class testRLPacman extends Application {
 	/**
 	 * nombre de parties ou l'agent apprend
 	 */
-	static int nbepisodelearn = 500;
+	static int nbepisodelearn = 10000;
 	/**
 	 * nombre de partie ou l'agent exploite la politique apprise (epsilon=0)
 	 */
@@ -57,7 +57,7 @@ public class testRLPacman extends Application {
 	/**
 	 * pour afficher courbe (somme des rec par episode) a la fin
 	 */
-	static boolean DISPLAYCHART = false;
+	static boolean DISPLAYCHART = true;
 	/**
 	 * //met un point tous les DELTA_DISPLAY epi
 	 */

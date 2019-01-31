@@ -97,7 +97,6 @@ public class QLearningAgent extends RLAgent {
 		//vmax est la valeur max de V pour tout s
 		//vmin est la valeur min de V pour tout s
 		// ...
-		out.println("Pour l'etat : " + e.toString() + " et l'action " + a.toString() + " , valeur = " + d);
 		this.notifyObs();
 
 	}
